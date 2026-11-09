@@ -33,15 +33,15 @@ final class CreateBookingAction
     /**
      * Выполнить создание брони.
      *
-     * @param  CreateBookingData  $data  Валидированные данные из FormRequest
+     * @param  CreateBookingData  $bookingData  Валидированные данные из FormRequest
      * @return Booking Созданная модель (с заполненным `id`, `created_at`, `updated_at`)
      *
      * @throws BookingConflictException Если слот занят параллельным запросом (race)
      * @throws ValidationException Если нарушен CHECK (баг валидации)
      */
-    public function execute(CreateBookingData $data): Booking
+    public function execute(CreateBookingData $bookingData): Booking
     {
-        $booking = $this->buildBooking($data);
+        $booking = $this->buildBooking($bookingData);
 
         try {
             DB::transaction(function () use ($booking): void {
@@ -61,21 +61,21 @@ final class CreateBookingAction
     /**
      * Собрать модель брони из DTO.
      *
-     * Поля присваиваются явно: `user_id` берётся из `$data->userId`
+     * Поля присваиваются явно: `user_id` берётся из `$bookingData->userId`
      * (который заполнен из `auth()->id()` в FormRequest), а не из тела
      * запроса. Это исключает mass assignment даже при наличии `#[Fillable]`.
      *
-     * @param  CreateBookingData  $data
+     * @param  CreateBookingData  $bookingData
      * @return Booking Несохранённая модель
      */
-    private function buildBooking(CreateBookingData $data): Booking
+    private function buildBooking(CreateBookingData $bookingData): Booking
     {
         $booking = new Booking;
-        $booking->room_id = $data->roomId;
-        $booking->user_id = $data->userId;
-        $booking->title = $data->title;
-        $booking->starts_at = $data->startsAt;
-        $booking->ends_at = $data->endsAt;
+        $booking->room_id = $bookingData->roomId;
+        $booking->user_id = $bookingData->userId;
+        $booking->title = $bookingData->title;
+        $booking->starts_at = $bookingData->startsAt;
+        $booking->ends_at = $bookingData->endsAt;
 
         return $booking;
     }

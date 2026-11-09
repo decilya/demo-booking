@@ -120,6 +120,9 @@ docker compose exec app php artisan test
 
 Тесты идут на PostgreSQL в отдельной базе `testing`.
 
+![Результат тестов: 30 passed](images/tests-pass.png)
+
+
 ---
 
 ## 📋 Исходное задание

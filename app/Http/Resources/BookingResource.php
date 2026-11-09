@@ -34,7 +34,6 @@ final class BookingResource extends JsonResource
         return [
             'id' => $this->id,
             'room_id' => $this->room_id,
-            'user_id' => $this->user_id,
             'title' => $this->title,
             'starts_at' => $this->starts_at->toIso8601String(),
             'ends_at' => $this->ends_at->toIso8601String(),

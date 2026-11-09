@@ -83,6 +83,14 @@ return new class extends Migration
                 room_id WITH =,
                 tstzrange(starts_at, ends_at) WITH &&
             )');
+
+        // Составной индекс для запроса в NoOverlappingBooking:
+        // WHERE room_id = ? AND starts_at < ? AND ends_at > ?
+        // GiST от EXCLUDE покрывает room_id + tstzrange, но btree
+        // (room_id, starts_at, ends_at) — страховка для планировщика
+        // на случай, если GiST окажется неоптимальным.
+        DB::statement('CREATE INDEX bookings_room_time_idx
+            ON bookings (room_id, starts_at, ends_at)');
     }
 
     /**
@@ -97,6 +105,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        DB::statement('DROP INDEX IF EXISTS bookings_room_time_idx');
+
         DB::statement('ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_no_overlap');
         DB::statement('ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_valid_interval');
 

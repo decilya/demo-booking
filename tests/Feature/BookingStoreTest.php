@@ -88,8 +88,7 @@ final class BookingStoreTest extends TestCase
             '2026-11-10T11:00:00+03:00',
         ))
             ->assertCreated()
-            ->assertJsonPath('data.room_id', $room->id)
-            ->assertJsonPath('data.user_id', $user->id);
+            ->assertJsonPath('data.room_id', $room->id);
 
         $this->assertDatabaseCount('bookings', 1);
     }

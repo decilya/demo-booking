@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTO\CreateBookingData;
 use App\Models\Room;
 use App\Rules\AlignedToBookingStep;
 use App\Rules\BookingDurationInRange;
@@ -30,8 +31,8 @@ use Illuminate\Validation\Validator;
  *    упадёт).
  *
  * Поле `user_id` намеренно отсутствует в правилах: атрибуция
- * устанавливается из `auth()->id()` в CreateBookingAction, чтобы клиент
- * не мог подменить автора через тело запроса (mass assignment).
+ * устанавливается из `auth()->id()` в `toData()`, чтобы клиент не мог
+ * подменить автора через тело запроса (mass assignment).
  */
 final class StoreBookingRequest extends FormRequest
 {
@@ -62,6 +63,25 @@ final class StoreBookingRequest extends FormRequest
             'starts_at' => ['required', 'date_format:Y-m-d\TH:i:sP'],
             'ends_at' => ['required', 'date_format:Y-m-d\TH:i:sP', 'after:starts_at'],
         ];
+    }
+
+    /**
+     * Преобразовать валидированные данные в DTO.
+     *
+     * `user_id` берётся из `auth()->id()`, а не из тела запроса —
+     * это исключает mass assignment на уровне транспорта.
+     *
+     * @return CreateBookingData
+     */
+    public function toData(): CreateBookingData
+    {
+        return new CreateBookingData(
+            userId: $this->user()->id,
+            roomId: $this->integer('room_id'),
+            title: $this->string('title')->toString(),
+            startsAt: CarbonImmutable::parse($this->string('starts_at')->toString()),
+            endsAt: CarbonImmutable::parse($this->string('ends_at')->toString()),
+        );
     }
 
     /**

@@ -214,6 +214,14 @@ Log::channel('bookings')->info('Booking created', ['booking_id' => $booking->id]
   `BookingIndexTest.php`. Прямое невыполнение части 2 ТЗ.
 - Отсутствие типизации возвращаемых значений методов контроллера `[verified: code]`.
 
+- **Несогласованный контракт `store` vs `index`/`today`** `[verified: code]`:
+  `store` возвращает `BookingResource` (`{data: {id, room_id, user_id, title,
+  starts_at, ends_at, created_at}}`), а `index` и `today` — сырые модели
+  Eloquent. В `index` появляется `updated_at`, которого нет в `store`;
+  формат дат различается (Carbon → `Y-m-d H:i:s` vs `toIso8601String()`).
+  По ТЗ `index`/`today` не исправляем, но при следующей итерации —
+  перевести на `BookingResource` для единого контракта.
+
 ---
 
 ## 4. Анализ архитектуры (SOLID / DDD)

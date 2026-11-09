@@ -55,7 +55,7 @@ class BookingController extends Controller
             ->whereDate('starts_at', today())
             ->get()
             ->map(fn ($b) => [
-                'time' => $b->starts_at . ' – ' . $b->ends_at,
+                'time' => $b->starts_at.' – '.$b->ends_at,
                 'author' => $b->user->name,
             ]);
     }

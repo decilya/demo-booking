@@ -136,6 +136,43 @@ SQLSTATE с семантикой HTTP.
 исправлять»). Правило «меняем только то, что требует ТЗ» должно
 применяться и к рекомендациям ИИ — включая рекомендации самого ассистента.
 
+### Кейс 7. Ревью рекомендовало сузить тип `\Throwable` до `RuntimeException`
+
+**Что предложил ИИ.** «Метод `translateDatabaseFailure` возвращает `\Throwable`,
+что размывает намерение. Указать более конкретный тип, например
+`RuntimeException` — так как `BookingConflictException` и `ValidationException`
+наследуются от него».
+
+**Почему неверно.**
+- `Illuminate\Validation\ValidationException` наследуется от `Exception`,
+  **не** от `RuntimeException`. В Laravel это факт:
+  `class ValidationException extends Exception implements ValidationException`.
+- Если изменить возвращаемый тип на `RuntimeException`, то
+  `ValidationException::withMessages(...)` из метода не скомпилируется —
+  она не подходит под этот тип.
+- `\Throwable` — минимально общий корректный тип: `BookingConflictException`
+  (extends `RuntimeException`), `ValidationException` (extends `Exception`),
+  `QueryException` (extends `PDOException`) — все реализуют `Throwable`.
+  `RuntimeException` — потомок `Exception`, но не общий предок всех трёх.
+
+**Как заметил.** Проверил иерархию наследования `ValidationException`
+в исходниках Laravel и документации. `RuntimeException` и `ValidationException`
+находятся в разных ветках дерева: `RuntimeException` extends `Exception`,
+`ValidationException` тоже extends `Exception`, но `RuntimeException`
+не является общим предком.
+
+**Решение.** Оставили `Throwable` (Pint применил `use Throwable;` и убрал
+leading backslash — правило `fully_qualified_strict_types`). На звонке:
+*«`Throwable` — минимальный тип, покрывающий три разных исключения из метода.
+`RuntimeException` не подходит, потому что `ValidationException` от него
+не наследуется. Сужение типа сломало бы компиляцию».*
+
+**Урок.** «Более конкретный тип» — не всегда лучше. Если метод возвращает
+разные ветки иерархии исключений, общий интерфейс (`Throwable`) — единственный
+корректный выбор. Сужать до конкретного класса можно, только если
+**все** возвращаемые исключения — его потомки. Это проверяется по исходникам,
+а не по интуиции.
+
 ## 3. Что проверил вручную (и не доверил ИИ)
 
 **Факты по репозиторию (через GitHub API, не «на веру»):**
